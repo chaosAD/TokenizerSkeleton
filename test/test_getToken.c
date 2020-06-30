@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "unity.h"
@@ -664,7 +663,6 @@ void test_getToken_given_r22_colon_dollar_sign_abc123_expect_those_tokens_to_be_
     TEST_ASSERT_NOT_NULL(intToken);
     TEST_ASSERT_EQUAL(TOKEN_INTEGER_TYPE, intToken->type);
     TEST_ASSERT_EQUAL_STRING("$abc123", intToken->str);
-    TEST_ASSERT_EQUAL_HEX(0xabc123, intToken->value);
     TEST_ASSERT_EQUAL(17, tokenizer->index);
     freeToken(intToken);
 
@@ -684,120 +682,3 @@ void test_getToken_given_r22_colon_dollar_sign_abc123_expect_those_tokens_to_be_
     TEST_FAIL_MESSAGE("Do not expect any exception to be thrown.");
   }
 }
-
-void test_pushBackToken_given_ali_plus_234_and_get_push_get_push_get_get_expect_ali_is_returned_for_the_first_3_gets(void) {
-  Token *token = NULL;
-  Tokenizer *tokenizer = NULL;
-
-  Try {
-    tokenizer = createTokenizer("  ali +234  ");
-
-    token = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("ali", token->str);
-
-    pushBackToken(tokenizer, token);      // Do not free the ali token, if
-                                          // you pushback
-    token = getToken(tokenizer);          // You get 'ali' instead of '+'
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("ali", token->str);
-
-    pushBackToken(tokenizer, token);      // Do not free the ali token, if
-                                          // you pushback
-    token = getToken(tokenizer);          // You get 'ali' instead of '+'
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("ali", token->str);
-    freeToken(token);                     // The ali token can be freed here
-
-    token = getToken(tokenizer);          // Now you would get '+' token
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_OPERATOR_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("+", token->str);
-    freeToken(token);
-    freeTokenizer(tokenizer);
-  } Catch(ex) {
-    dumpTokenErrorMessage(ex, 1);
-    TEST_FAIL_MESSAGE("Do not expect any exception to be thrown.");
-  }
-}
-
-void test_pushBackToken_hi_456_1dot3e7_bambi_string_and_bracket_should_able_to_get_back_all_tokens() {
-  Token *token, *token2, *token3, *token4, *token5;
-  Tokenizer *tokenizer = NULL;
-
-  Try {
-    tokenizer = createTokenizer(" hi 456  1.3e7 \"bambi\" ] ");
-    token  = getToken(tokenizer);
-    token2 = getToken(tokenizer);
-    token3 = getToken(tokenizer);
-    token4 = getToken(tokenizer);
-    token5 = getToken(tokenizer);
-    pushBackToken(tokenizer, token5);
-    pushBackToken(tokenizer, token4);
-    pushBackToken(tokenizer, token3);
-    pushBackToken(tokenizer, token2);
-    pushBackToken(tokenizer, token);
-
-    token  = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_IDENTIFIER_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("hi", token->str);
-    TEST_ASSERT_EQUAL(3, tokenizer->index);
-    freeToken(token);
-
-    token = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_INTEGER_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("456", token->str);
-    TEST_ASSERT_EQUAL(7, tokenizer->index);
-    freeToken(token);
-
-    token = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_FLOAT_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("1.3e7", token->str);
-    TEST_ASSERT_EQUAL(14, tokenizer->index);
-    freeToken(token);
-
-    token = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_STRING_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("bambi", token->str);
-    TEST_ASSERT_EQUAL(22, tokenizer->index);
-    freeToken(token);
-
-    token = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_OPERATOR_TYPE, token->type);
-    TEST_ASSERT_EQUAL_STRING("]", token->str);
-    TEST_ASSERT_EQUAL(24, tokenizer->index);
-    freeToken(token);
-
-    // Should return NULL token because no more operator
-    token = getToken(tokenizer);
-    TEST_ASSERT_NOT_NULL(token);
-    TEST_ASSERT_EQUAL(TOKEN_NULL_TYPE, token->type);
-    freeToken(token);
-    freeTokenizer(tokenizer);
-  } Catch(ex) {
-    dumpTokenErrorMessage(ex, 1);
-    TEST_FAIL_MESSAGE("Do not expect any exception to be thrown.");
-  }
-}
-
-void test_error_throwing(void) {
-  Tokenizer *tokenizer;
-  Token *token;
-  Try {
-    tokenizer = createTokenizer(" 45 abu bakar ");
-    token = getToken(tokenizer);
-		token->affix = INFIX;
-    throwException(ERR_SYSTEM_ERROR, token, "Just for fun: Do not expect a number here: %s", token->str);
-  } Catch(ex) {
-    dumpTokenErrorMessage(ex, 1);
-  }
-}
-

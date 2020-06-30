@@ -6,18 +6,22 @@
 # This sample, therefore, only demonstrates running a collection of unit tests.
 
 :project:
-  :use_exceptions: TRUE
+  :use_exceptions: FALSE
   :use_test_preprocessor: TRUE
   :use_auxiliary_dependencies: TRUE
   :build_root: build
 #  :release_build: TRUE
   :test_file_prefix: test_
-  :which_ceedling: vendor/ceedling
+  :which_ceedling: gem
+  :ceedling_version: 0.30.0
   :default_tasks:
     - test:all
 
+#:test_build:
+#  :use_assembly: TRUE
+
 #:release_build:
-#  :output: MyApp.out
+#  :output: MyApp.exe
 #  :use_assembly: FALSE
 
 :environment:
@@ -33,19 +37,21 @@
     - src/**
   :support:
     - test/support
+  :libraries: [lib/x64_10_1_0]
 
 :defines:
   # in order to add common defines:
   #  1) remove the trailing [] from the :common: section
   #  2) add entries to the :common: section (e.g. :test: has TEST defined)
-  :commmon: &common_defines []
+  :common: &common_defines []
   :test:
     - *common_defines
     - TEST
     - CEXCEPTION_USE_CONFIG_FILE
     # The following macro is to ensure vsnprintf() returns the length of
     # bytes needed to write when it fails due to buffer being too small
-    - _ISOC99_SOURCE
+    # [note: Not needed for GCC version 10.1.0]
+    #- _ISOC99_SOURCE
   :test_preprocess:
     - *common_defines
     - TEST
@@ -64,46 +70,20 @@
     int8:     INT8
     bool:     UINT8
 
+# Add -gcov to the plugins list to make sure of the gcov plugin
+# You will need to have gcov and gcovr both installed to make it work.
+# For more information on these options, see docs in plugins/gcov
 :gcov:
-    :html_report_type: basic
+  :reports:
+    - HtmlDetailed
+  :gcovr:
+    :html_medium_threshold: 75
+    :html_high_threshold: 90
 
 #:tools:
 # Ceedling defaults to using gcc for compiling, linking, etc.
 # As [:tools] is blank, gcc will be used (so long as it's in your system path)
 # See documentation to configure a given toolchain for use
-:tools:
-  :test_compiler:
-    :executable: gcc                    #exists in system search path
-    :name: 'gcc compiler'
-    :arguments:
-      - -c "${1}"                       #source code input file (Ruby method call param list sub)
-      - -o "${2}"                       #object file output (Ruby method call param list sub)
-      - -g                              #add debugging info so that it can be debugged under GDB
-      - -I test
-      - -I vendor/ceedling/vendor/unity/src
-      - -I vendor/ceedling/vendor/cmock/src
-      - -I vendor/ceedling/vendor/c_exception/lib
-      - -I build/test/mocks
-      - -I test/support
-      - -I src
-      - -D CEXCEPTION_USE_CONFIG_FILE
-      - -D _ISOC99_SOURCE
-      - -D TEST
-
-  :test_linker:
-    :executable: gcc                    #absolute file path
-    :name: 'gcc linker'
-    :arguments:
-      - "${1}"                          #Link all the object files. Note that, this must come before
-                                        #link libraries
-#      - -Llib/x86                       #Indicate where the user defined libraries reside
-#      - -Llib/x64_7_3_0
-#      - -Llib/x64_6_3_0
-#      - -Llib/x64_5_3_0
-      - -Llib/x64_TDM_5_1_0
-      - -lm                             #Link with math library
-      - -ltokenizer                     #Link with Tokenizer library
-      - -o "${2}"                       #Executable file output (Ruby method call param list sub)
 
 # LIBRARIES
 # These libraries are automatically injected into the build process. Those specified as
@@ -111,16 +91,15 @@
 # tests or releases. These options are MERGED with the options in supplemental yaml files.
 :libraries:
   :placement: :end
-  :flag: "${1}"  # or "-L ${1}" for example
-  :common: &common_libraries []
-  :test:
-    - *common_libraries
-  :release:
-    - *common_libraries
+  :flag: "-l${1}"
+  :path_flag: "-L ${1}"
+  :system: [Tokenizer]    # for example, you might list 'm' to grab the math library
+  :test: []
+  :release: []
 
 :plugins:
   :load_paths:
-    - vendor/ceedling/plugins
+    - "#{Ceedling.load_path}"
   :enabled:
     - stdout_pretty_tests_report
     - module_generator

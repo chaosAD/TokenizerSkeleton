@@ -15,6 +15,4 @@ void dumpException(Exception *e);
 
 void throwException(int errorCode, void *data, char *message, ...);
 
-int add(int numOfItems, ...);
-
 #endif // Exception_H
